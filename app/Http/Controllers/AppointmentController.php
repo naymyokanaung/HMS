@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Patient;
+use App\Models\Doctor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AppointmentController extends Controller
 {
@@ -13,7 +16,21 @@ class AppointmentController extends Controller
     public function index()
     {
         //
-        echo "hello";
+        $appointments = Appointment::Paginate(10);
+        $patients = Patient::all();
+        // foreach ($appointments as $appointment) {
+        //     $patient = Patient::find($appointment->patient_id);
+        //     $patients[index] = $patient->name;
+        //     index++;
+        // }
+        $doctors = [];
+        $index = 0;
+        foreach ($appointments as $appointment) {
+            $doctor = Doctor::find($appointment->doctor_id);
+            $doctors[$index] = $doctor->name;
+            $index++;
+        }
+        return view('appointments', ["appointments" => $appointments, "patients" => $patients, "doctors" => $doctors]);
     }
 
     /**
@@ -22,6 +39,8 @@ class AppointmentController extends Controller
     public function create()
     {
         //
+        $doctors = Doctor::all();
+        return view('appointment', ["doctors" => $doctors]);
     }
 
     /**
@@ -29,27 +48,60 @@ class AppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
         $request->validate([
-            'patient_id' => 'required',
-            'doctor_id' => 'required',
+            'name' => 'required',
+            'phone' => 'required',
+            'address' => 'required',
+            'age' => 'required',
             'date1' => 'required',
             'time1' => 'required',
-            'diagnosis' => 'required',
-            'date2' => 'required',
-            'time2' => 'required',
+            'file' => 'required|image|mimes:jpeg,jpg,png,svg|max:1024',
         ], [
-            'patient_id.required' => "Enter Patient Name",
-            'doctor_id.required' => "Enter Doctor Name",
-            'date1.required' => "Enter the date",
-            'time1.required' => "Enter the time",
-            'diagnosis.required' => "Enter Diagnosis",
-            'date2.required' => "Enter the date",
-            'time2.required' => "Enter the time",
+            'file.max' => "Your file exceeds 1 MB.",
+            'file.image' => "Your file type is not allowed.",
         ]);
 
-        Appointment::create($request->except('_token'));
-        return redirect()->route('patient.index');
+        // Appointment::create($request->except('_token'));
+        // return redirect()->route('patient.index');
+
+        $patient = Patient::create([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'age' => $request->age,
+            'gender' => $request->gender,
+        ]);
+        $patient_id = $patient->id;
+
+        $imageName = time() . "." . $request->file->extension();
+        // $success = $request->file->move(public_path('uploads'), $imageName);
+        //Store in app/public/images
+        $success = $request->file->storeAs('images', $imageName);
+        if ($success) {
+            //mass assignment
+            $appointment = Appointment::create([
+                'patient_id' => $patient_id, // Set the patient_id here
+                'doctor_id' => $request->doctor_id,
+                'date1' => $request->date1,
+                'time1' => $request->time1,
+                'date2' => $request->date2,
+                'time2' => $request->time2,
+                'diagnosis' => $request->diagnosis,
+                'file' => $imageName,
+            ]);
+        }
+        //assign one by one
+        // $appointment = new Appointment();
+        // $appointment->patient_id = $patient_id;
+        // $appointment->doctor_id = $request->doctor_id;
+        // $appointment->date1 = $request->date1;
+        // $appointment->time1 = $request->time1;
+        // $appointment->date2 = $request->date2;
+        // $appointment->time2 = $request->doctor_id;
+        // $appointment->diagnosis = $request->diagnosis;
+        // $appointment->file = $request->file;
+        // $appointment->save();
     }
 
     /**
@@ -63,9 +115,10 @@ class AppointmentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function approve($id)
     {
         //
+        echo "hello";
     }
 
     /**
@@ -74,6 +127,7 @@ class AppointmentController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        // dd($id);
     }
 
     /**

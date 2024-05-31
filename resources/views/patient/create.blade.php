@@ -53,7 +53,7 @@
             <!-- Appointment Details Form -->
             <div id="appointment-form" style="display: none;" class="m-5">
                 <h2 class="text-center">Appointment Details</h2>
-                <form id="appointment-info-form" method="POST" action="{{ route('appointment.store') }}">
+                <form id="appointment-info-form" method="POST" action="{{ route('appointment.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label for="patient_id" class="form-label">Patient ID</label>

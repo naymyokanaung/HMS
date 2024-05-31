@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('date2');
             $table->time('time2');
             $table->string('file');
+            $table->boolean('approvedBy')->nullable();
             $table->timestamps();
         });
 
